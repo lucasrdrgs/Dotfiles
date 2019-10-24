@@ -1,3 +1,4 @@
+# You may need to install gvim instead of Vim to get the yank & paste fully working with system clipboard.
 set number hls ic is cin ci pi
 autocmd!
 autocmd FileType * set tabstop=4
