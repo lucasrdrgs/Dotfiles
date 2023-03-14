@@ -110,6 +110,11 @@ fi
 alias python=python3.10
 
 getBatteryString() {
+    pygmentize_exists=$(which acpi)
+    if [[ -z "$pygmentize_exists" ]]; then
+        echo -n " "
+	return
+    fi
     batteryPercentage=$(acpi -b | grep -P -o '[0-9]+(?=%)')
     batteryStatus=$(acpi -b | awk '{print $3}')
 
