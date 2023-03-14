@@ -110,7 +110,7 @@ fi
 alias python=python3.10
 
 getBatteryString() {
-    acpi_exists=$(which acpi)
+    acpi_exists=$(which acpi 2>/dev/null)
     if [[ -z "$acpi_exists" ]]; then
         echo -n " "
 	return
@@ -165,9 +165,13 @@ shh
 LONGCAT=0
 
 cat () {
-    pygmentize_exists=$(which pygmentize)
+    pygmentize_exists=$(which pygmentize 2>/dev/null)
     if [[ -z "$pygmentize_exists" ]]; then
-        /bin/cat $1
+        if [[ $LONGCAT -eq 1 ]]; then
+            /bin/cat $1 | less -NR
+        else
+            /bin/cat $1
+        fi
         echo "(pygmentize not found, fell back to cat)"
         return
     fi
@@ -179,6 +183,12 @@ cat () {
     else
         lxr="-l ${1##*.}"
     fi
+
+    {
+        (pygmentize $lxr /dev/null) 2>/dev/null
+    } || {
+        lxr="-l text"
+    }
 
     if [[ $LONGCAT -eq 1 ]]; then
         pygmentize -g -O full,style=monokai $lxr $1 | less -NR
