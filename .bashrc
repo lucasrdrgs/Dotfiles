@@ -110,8 +110,8 @@ fi
 alias python=python3.10
 
 getBatteryString() {
-    pygmentize_exists=$(which acpi)
-    if [[ -z "$pygmentize_exists" ]]; then
+    acpi_exists=$(which acpi)
+    if [[ -z "$acpi_exists" ]]; then
         echo -n " "
 	return
     fi
