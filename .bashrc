@@ -185,7 +185,7 @@ cat () {
     fi
 
     {
-        (pygmentize $lxr /dev/null) 2>/dev/null
+        tmp=$(pygmentize $lxr /dev/null)
     } || {
         lxr="-l text"
     }
