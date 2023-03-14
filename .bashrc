@@ -1,152 +1,194 @@
-#
-# ~/.bashrc
-#
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
+iatest=$(expr index "$-" i)
 
-[[ $- != *i* ]] && return
+# If not running interactively, don't do anything
+[ -z "$PS1" ] && return
 
-colors() {
-	local fgc bgc vals seq0
+if [[ $iatest > 0 ]]; then bind "set bell-style visible"; fi
 
-	printf "Color escapes are %s\n" '\e[${value};...;${value}m'
-	printf "Values 30..37 are \e[33mforeground colors\e[m\n"
-	printf "Values 40..47 are \e[43mbackground colors\e[m\n"
-	printf "Value  1 gives a  \e[1mbold-faced look\e[m\n\n"
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
 
-	# foreground colors
-	for fgc in {30..37}; do
-		# background colors
-		for bgc in {40..47}; do
-			fgc=${fgc#37} # white
-			bgc=${bgc#40} # black
-
-			vals="${fgc:+$fgc;}${bgc}"
-			vals=${vals%%;}
-
-			seq0="${vals:+\e[${vals}m}"
-			printf "  %-9s" "${seq0:-(default)}"
-			printf " ${seq0}TEXT\e[m"
-			printf " \e[${vals:+${vals+$vals;}}1mBOLD\e[m"
-		done
-		echo; echo
-	done
-}
-
-[ -r /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
-
-# Change the window title of X terminals
-case ${TERM} in
-	xterm*|rxvt*|Eterm*|aterm|kterm|gnome*|interix|konsole*)
-		PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\007"'
-		;;
-	screen*)
-		PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/\~}\033\\"'
-		;;
-esac
-
-use_color=true
-
-# Set colorful PS1 only on colorful terminals.
-# dircolors --print-database uses its own built-in database
-# instead of using /etc/DIR_COLORS.  Try to use the external file
-# first to take advantage of user additions.  Use internal bash
-# globbing instead of external grep binary.
-safe_term=${TERM//[^[:alnum:]]/?}   # sanitize TERM
-match_lhs=""
-[[ -f ~/.dir_colors   ]] && match_lhs="${match_lhs}$(<~/.dir_colors)"
-[[ -f /etc/DIR_COLORS ]] && match_lhs="${match_lhs}$(</etc/DIR_COLORS)"
-[[ -z ${match_lhs}    ]] \
-	&& type -P dircolors >/dev/null \
-	&& match_lhs=$(dircolors --print-database)
-[[ $'\n'${match_lhs} == *$'\n'"TERM "${safe_term}* ]] && use_color=true
-
-if ${use_color} ; then
-	# Enable colors for ls, etc.  Prefer ~/.dir_colors #64489
-	if type -P dircolors >/dev/null ; then
-		if [[ -f ~/.dir_colors ]] ; then
-			eval $(dircolors -b ~/.dir_colors)
-		elif [[ -f /etc/DIR_COLORS ]] ; then
-			eval $(dircolors -b /etc/DIR_COLORS)
-		fi
-	fi
-
-	if [[ ${EUID} == 0 ]] ; then
-		PS1='\[\033[01;31m\][\h\[\033[01;36m\] \W\[\033[01;31m\]]\$\[\033[00m\] '
-	else
-		PS1='\[\033[01;32m\][\u@\h\[\033[01;37m\] \W\[\033[01;32m\]]\$\[\033[00m\] '
-	fi
-
-	alias ls='ls --color=auto'
-	alias grep='grep --colour=auto'
-	alias egrep='egrep --colour=auto'
-	alias fgrep='fgrep --colour=auto'
-else
-	if [[ ${EUID} == 0 ]] ; then
-		# show root@ when we don't have colors
-		PS1='\u@\h \W \$ '
-	else
-		PS1='\u@\h \w \$ '
-	fi
-fi
-
-unset use_color safe_term match_lhs sh
-
-alias cp="cp -i"                          # confirm before overwriting something
-alias df='df -h'                          # human-readable sizes
-alias free='free -m'                      # show sizes in MB
-alias np='nano -w PKGBUILD'
-alias more=less
-
-xhost +local:root > /dev/null 2>&1
-
-complete -cf sudo
-
-# Bash won't get SIGWINCH if another process is in the foreground.
-# Enable checkwinsize so that bash will check the terminal size when
-# it regains control.  #65623
-# http://cnswww.cns.cwru.edu/~chet/bash/FAQ (E11)
-shopt -s checkwinsize
-
-shopt -s expand_aliases
-
-# export QT_SELECT=4
-
-# Enable history appending instead of overwriting.  #139609
+# append to the history file, don't overwrite it
 shopt -s histappend
 
-#
-# # ex - archive extractor
-# # usage: ex <file>
-ex ()
-{
-  if [ -f $1 ] ; then
-    case $1 in
-      *.tar.bz2)   tar xjf $1   ;;
-      *.tar.gz)    tar xzf $1   ;;
-      *.bz2)       bunzip2 $1   ;;
-      *.rar)       unrar x $1     ;;
-      *.gz)        gunzip $1    ;;
-      *.tar)       tar xf $1    ;;
-      *.tbz2)      tar xjf $1   ;;
-      *.tgz)       tar xzf $1   ;;
-      *.zip)       unzip $1     ;;
-      *.Z)         uncompress $1;;
-      *.7z)        7z x $1      ;;
-      *)           echo "'$1' cannot be extracted via ex()" ;;
-    esac
-  else
-    echo "'$1' is not a valid file"
-  fi
-}
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
 
-# better yaourt colors
-export YAOURT_COLORS="nb=1:pkg=1:ver=1;32:lver=1;45:installed=1;42:grp=1;34:od=1;41;5:votes=1;44:dsc=0:other=1;35"
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
 
-export PS1="\[\e[38;5;43m\]\u\[\e[38;5;249m\]@\[\e[38;5;208m\]\h \[\e[38;5;69m\]\w λ\[\e[0m\] "
+shopt -s histappend
+PROMPT_COMMAND='history -a'
 
-if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-	source /etc/profile.d/vte.sh
+# Ignore case on auto-completion
+# Note: bind used instead of sticking these in .inputrc
+if [[ $iatest > 0 ]]; then bind "set completion-ignore-case on"; fi
+
+# Show auto-completion list automatically, without double tab
+if [[ $iatest > 0 ]]; then bind "set show-all-if-ambiguous On"; fi
+
+EDITOR=vim
+VISUAL=vim
+
+# To have colors for ls and all grep commands such as grep, egrep and zgrep
+export CLICOLOR=1
+export LS_COLORS='no=00:fi=00:di=00;34:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.ogg=01;35:*.mp3=01;35:*.wav=01;35:*.xml=00;31:'
+#export GREP_OPTIONS='--color=auto' #deprecated
+alias grep="/usr/bin/grep $GREP_OPTIONS"
+unset GREP_OPTIONS
+
+# Color for manpages in less makes manpages a little easier to read
+export LESS_TERMCAP_mb=$'\E[01;31m'
+export LESS_TERMCAP_md=$'\E[01;31m'
+export LESS_TERMCAP_me=$'\E[0m'
+export LESS_TERMCAP_se=$'\E[0m'
+export LESS_TERMCAP_so=$'\E[01;44;33m'
+export LESS_TERMCAP_ue=$'\E[0m'
+export LESS_TERMCAP_us=$'\E[01;32m'
+
+alias bd='cd "$OLDPWD"'
+
+# Allow ctrl-S for history navigation (with ctrl-R)
+stty -ixon
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-eval "$(thefuck --alias)"
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
 
-alias cats='highlight -O ansi --force'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+alias python=python3.10
+
+getBatteryString() {
+    batteryPercentage=$(acpi -b | grep -P -o '[0-9]+(?=%)')
+    batteryStatus=$(acpi -b | awk '{print $3}')
+
+    if [ "$batteryStatus" = "Charging," ] || [ "$batteryStatus" = "Unknown," ] || [ "$batteryStatus" = "Full," ]; then
+        echo -n ""
+    else
+        echo -n " "
+        if [ "$batteryPercentage" -le 10 ]; then
+            echo "\[\e[0;38;5;196m\][$batteryPercentage%]"
+        elif [ "$batteryPercentage" -le 20 ]; then
+            echo "\[\e[0;38;5;202m\][$batteryPercentage%]"
+        elif [ "$batteryPercentage" -le 30 ]; then
+            echo "\[\e[0;38;5;208m\][$batteryPercentage%]"
+        elif [ "$batteryPercentage" -le 50 ]; then
+            echo "\[\e[0;38;5;220m\][$batteryPercentage%]"
+        elif [ "$batteryPercentage" -le 70 ]; then
+            echo "\[\e[0;38;5;149m\][$batteryPercentage%]"
+        elif [ "$batteryPercentage" -le 80 ]; then
+            echo "\[\e[0;38;5;154m\][$batteryPercentage%]"
+        elif [ "$batteryPercentage" -le 90 ]; then
+            echo "\[\e[0;38;5;83m\][$batteryPercentage%]"
+        elif [ "$batteryPercentage" -le 100 ]; then
+            echo "\[\e[0;38;5;46m\][$batteryPercentage%]"
+        fi
+    fi
+    echo -n " "
+}
+
+SHH_TOGGLE=1
+shh () {
+	if [[ $SHH_TOGGLE -eq 0 ]]; then
+		SHH_TOGGLE=1
+    	PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+    	if [ "$TERM_PROGRAM" = "vscode" ]; then
+        	PROMPT_COMMAND='PS1="${debian_chroot:+($debian_chroot)}\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+	    fi
+	else
+		SHH_TOGGLE=0
+		PROMPT_COMMAND='PS1="${debian_chroot:+($debian_chroot)}\[\e[38;2;242;44;61m\]\u$(getBatteryString)\[\e[38;2;172;212;238m\]\w \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+		if [ "$TERM_PROGRAM" = "vscode" ]; then
+			PROMPT_COMMAND='PS1="${debian_chroot:+($debian_chroot)}\[\e[38;2;0;122;204m\]code$(getBatteryString)\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+		fi
+	fi
+}
+
+shh
+
+LONGCAT=0
+
+cat () {
+    pygmentize_exists=$(which pygmentize)
+    if [[ -z "$pygmentize_exists" ]]; then
+        /bin/cat $1
+        echo "(pygmentize not found, fell back to cat)"
+        return
+    fi
+
+    lxr=""
+
+    if [[ "$#" -eq 2 ]]; then
+        lxr="-l $2"
+    else
+        lxr="-l ${1##*.}"
+    fi
+
+    if [[ $LONGCAT -eq 1 ]]; then
+        pygmentize -g -O full,style=monokai $lxr $1 | less -NR
+    else
+        pygmentize -g -O full,style=monokai $lxr $1
+    fi
+}
+
+longcat () {
+    LONGCAT=1
+    cat $@
+    LONGCAT=0
+}
+
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH="$PATH:$ANDROID_HOME/emulator"
+export PATH="$PATH:$ANDROID_HOME/platform-tools"
+export PATH="$PATH:/opt/flutter/bin"
