@@ -123,21 +123,21 @@ getBatteryString() {
     else
         echo -n " "
         if [ "$batteryPercentage" -le 10 ]; then
-            echo "\[\e[0;38;5;196m\][$batteryPercentage%]"
+            echo -n "\[\e[0;38;5;196m\][$batteryPercentage%]"
         elif [ "$batteryPercentage" -le 20 ]; then
-            echo "\[\e[0;38;5;202m\][$batteryPercentage%]"
+            echo -n "\[\e[0;38;5;202m\][$batteryPercentage%]"
         elif [ "$batteryPercentage" -le 30 ]; then
-            echo "\[\e[0;38;5;208m\][$batteryPercentage%]"
+            echo -n "\[\e[0;38;5;208m\][$batteryPercentage%]"
         elif [ "$batteryPercentage" -le 50 ]; then
-            echo "\[\e[0;38;5;220m\][$batteryPercentage%]"
+            echo -n "\[\e[0;38;5;220m\][$batteryPercentage%]"
         elif [ "$batteryPercentage" -le 70 ]; then
-            echo "\[\e[0;38;5;149m\][$batteryPercentage%]"
+            echo -n "\[\e[0;38;5;149m\][$batteryPercentage%]"
         elif [ "$batteryPercentage" -le 80 ]; then
-            echo "\[\e[0;38;5;154m\][$batteryPercentage%]"
+            echo -n "\[\e[0;38;5;154m\][$batteryPercentage%]"
         elif [ "$batteryPercentage" -le 90 ]; then
-            echo "\[\e[0;38;5;83m\][$batteryPercentage%]"
+            echo -n "\[\e[0;38;5;83m\][$batteryPercentage%]"
         elif [ "$batteryPercentage" -le 100 ]; then
-            echo "\[\e[0;38;5;46m\][$batteryPercentage%]"
+            echo -n "\[\e[0;38;5;46m\][$batteryPercentage%]"
         fi
     fi
     echo -n " "
