@@ -8,6 +8,9 @@ iatest=$(expr index "$-" i)
 
 if [[ $iatest > 0 ]]; then bind "set bell-style visible"; fi
 
+export EDITOR=vim
+export VISUAL=vim
+
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
@@ -109,55 +112,21 @@ fi
 
 alias python=python3.10
 
-getBatteryString() {
-    acpi_exists=$(which acpi 2>/dev/null)
-    if [[ -z "$acpi_exists" ]]; then
-        echo -n " "
-	return
-    fi
-    batteryPercentage=$(acpi -b | grep -P -o '[0-9]+(?=%)')
-    batteryStatus=$(acpi -b | awk '{print $3}')
-
-    if [ "$batteryStatus" = "Charging," ] || [ "$batteryStatus" = "Unknown," ] || [ "$batteryStatus" = "Full," ]; then
-        echo -n ""
-    else
-        echo -n " "
-        if [ "$batteryPercentage" -le 10 ]; then
-            echo -n "\[\e[0;38;5;196m\][$batteryPercentage%]"
-        elif [ "$batteryPercentage" -le 20 ]; then
-            echo -n "\[\e[0;38;5;202m\][$batteryPercentage%]"
-        elif [ "$batteryPercentage" -le 30 ]; then
-            echo -n "\[\e[0;38;5;208m\][$batteryPercentage%]"
-        elif [ "$batteryPercentage" -le 50 ]; then
-            echo -n "\[\e[0;38;5;220m\][$batteryPercentage%]"
-        elif [ "$batteryPercentage" -le 70 ]; then
-            echo -n "\[\e[0;38;5;149m\][$batteryPercentage%]"
-        elif [ "$batteryPercentage" -le 80 ]; then
-            echo -n "\[\e[0;38;5;154m\][$batteryPercentage%]"
-        elif [ "$batteryPercentage" -le 90 ]; then
-            echo -n "\[\e[0;38;5;83m\][$batteryPercentage%]"
-        elif [ "$batteryPercentage" -le 100 ]; then
-            echo -n "\[\e[0;38;5;46m\][$batteryPercentage%]"
-        fi
-    fi
-    echo -n " "
-}
-
 SHH_TOGGLE=1
 shh () {
-	if [[ $SHH_TOGGLE -eq 0 ]]; then
-		SHH_TOGGLE=1
-    	PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
-    	if [ "$TERM_PROGRAM" = "vscode" ]; then
-        	PROMPT_COMMAND='PS1="${debian_chroot:+($debian_chroot)}\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
-	    fi
-	else
-		SHH_TOGGLE=0
-		PROMPT_COMMAND='PS1="${debian_chroot:+($debian_chroot)}\[\e[38;2;242;44;61m\]\u$(getBatteryString)\[\e[38;2;172;212;238m\]\w \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
-		if [ "$TERM_PROGRAM" = "vscode" ]; then
-			PROMPT_COMMAND='PS1="${debian_chroot:+($debian_chroot)}\[\e[38;2;0;122;204m\]code$(getBatteryString)\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
-		fi
-	fi
+        if [[ $SHH_TOGGLE -eq 0 ]]; then
+                SHH_TOGGLE=1
+        PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+        if [ "$TERM_PROGRAM" = "vscode" ]; then
+                PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+            fi
+        else
+                SHH_TOGGLE=0
+                PROMPT_COMMAND='PS1="\[\e[38;2;242;44;61m\]\u \[\e[38;2;172;212;238m\]\w \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+                if [ "$TERM_PROGRAM" = "vscode" ]; then
+                        PROMPT_COMMAND='PS1="\[\e[38;2;0;122;204m\]code \[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+                fi
+        fi
 }
 
 shh
@@ -165,6 +134,15 @@ shh
 LONGCAT=0
 
 cat () {
+    viu_exists=$(which viu 2>/dev/null)
+    if [[ $# -ge 1 && -n "$viu_exists" ]]; then
+        mime=$(file -b --mime-type $1)
+        if [[ "$mime" == *image/* ]]; then
+            viu $1
+            return 0
+        fi
+    fi
+
     pygmentize_exists=$(which pygmentize 2>/dev/null)
     if [[ -z "$pygmentize_exists" ]]; then
         if [[ $LONGCAT -eq 1 ]]; then
@@ -176,24 +154,10 @@ cat () {
         return
     fi
 
-    lxr=""
-
-    if [[ "$#" -eq 2 ]]; then
-        lxr="-l $2"
-    else
-        lxr="-l ${1##*.}"
-    fi
-
-    {
-        tmp=$(pygmentize $lxr /dev/null > /dev/null 2>&1)
-    } || {
-        lxr="-l text"
-    }
-
     if [[ $LONGCAT -eq 1 ]]; then
-        pygmentize -g -O full,style=monokai $lxr $1 | less -NR
+        pygmentize -g -O full,style=monokai $1 | less -NR
     else
-        pygmentize -g -O full,style=monokai $lxr $1
+        pygmentize -g -O full,style=monokai $1
     fi
 }
 
