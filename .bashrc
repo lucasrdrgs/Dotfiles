@@ -31,7 +31,7 @@ PROMPT_COMMAND='history -a'
 
 # Ignore case on auto-completion
 # Note: bind used instead of sticking these in .inputrc
-if [[ $iatest > 0 ]]; then bind "set completion-ignore-case on"; fi
+# if [[ $iatest > 0 ]]; then bind "set completion-ignore-case on"; fi
 
 # Show auto-completion list automatically, without double tab
 if [[ $iatest > 0 ]]; then bind "set show-all-if-ambiguous On"; fi
@@ -110,35 +110,37 @@ if ! shopt -oq posix; then
   fi
 fi
 
-alias python=python3.10
-
 SHH_TOGGLE=1
 shh () {
-        if [[ $SHH_TOGGLE -eq 0 ]]; then
-                SHH_TOGGLE=1
-        PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
-        if [ "$TERM_PROGRAM" = "vscode" ]; then
-                PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
-            fi
-        else
-                SHH_TOGGLE=0
-                PROMPT_COMMAND='PS1="\[\e[38;2;242;44;61m\]\u \[\e[38;2;172;212;238m\]\w \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
-                if [ "$TERM_PROGRAM" = "vscode" ]; then
-                        PROMPT_COMMAND='PS1="\[\e[38;2;0;122;204m\]code \[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
-                fi
-        fi
+	if [[ $SHH_TOGGLE -eq 0 ]]; then
+		SHH_TOGGLE=1
+    	PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+    	if [ "$TERM_PROGRAM" = "vscode" ]; then
+        	PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+	    fi
+	else
+		SHH_TOGGLE=0
+		PROMPT_COMMAND='PS1="\[\e[38;2;242;44;61m\]\u \[\e[38;2;172;212;238m\]\w \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+		if [ "$TERM_PROGRAM" = "vscode" ]; then
+			PROMPT_COMMAND='PS1="\[\e[38;2;0;122;204m\]code \[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+		fi
+	fi
 }
 
 shh
 
 LONGCAT=0
 
+alias ccat="/usr/bin/cat"
+alias catt="/usr/bin/cat"
+alias caat="/usr/bin/cat"
+
 cat () {
-    viu_exists=$(which viu 2>/dev/null)
-    if [[ $# -ge 1 && -n "$viu_exists" ]]; then
+    wezterm_exists=$(which wezterm 2>/dev/null)
+    if [[ $# -ge 1 && -n "$wezterm_exists" ]]; then
         mime=$(file -b --mime-type $1)
         if [[ "$mime" == *image/* ]]; then
-            viu $1
+            wezterm imgcat $1
             return 0
         fi
     fi
@@ -167,7 +169,15 @@ longcat () {
     LONGCAT=0
 }
 
-export ANDROID_HOME=$HOME/Android/Sdk
-export PATH="$PATH:$ANDROID_HOME/emulator"
-export PATH="$PATH:$ANDROID_HOME/platform-tools"
-export PATH="$PATH:/opt/flutter/bin"
+if ! shopt -oq posix; then
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+    fi
+fi
+
+#export ANDROID_HOME=$HOME/Android/Sdk
+#export PATH="$PATH:$ANDROID_HOME/emulator"
+#export PATH="$PATH:$ANDROID_HOME/platform-tools"
+#export PATH="$PATH:/opt/flutter/bin"
