@@ -110,19 +110,26 @@ if ! shopt -oq posix; then
   fi
 fi
 
+get_venv_name () {
+    if [[ "$VIRTUAL_ENV" ]]; then
+        VENV_NAME=$(basename "$VIRTUAL_ENV")
+        echo "($VENV_NAME) "
+    fi
+}
+
 SHH_TOGGLE=1
 shh () {
 	if [[ $SHH_TOGGLE -eq 0 ]]; then
 		SHH_TOGGLE=1
-    	PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+    	PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;172;212;238m\]\W \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
     	if [ "$TERM_PROGRAM" = "vscode" ]; then
-        	PROMPT_COMMAND='PS1="\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+        	PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
 	    fi
 	else
 		SHH_TOGGLE=0
-		PROMPT_COMMAND='PS1="\[\e[38;2;242;44;61m\]\u \[\e[38;2;172;212;238m\]\w \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+		PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;242;44;61m\]\u \[\e[38;2;172;212;238m\]\w \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
 		if [ "$TERM_PROGRAM" = "vscode" ]; then
-			PROMPT_COMMAND='PS1="\[\e[38;2;0;122;204m\]code \[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+			PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;0;122;204m\]code \[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
 		fi
 	fi
 }
@@ -181,3 +188,7 @@ fi
 #export PATH="$PATH:$ANDROID_HOME/emulator"
 #export PATH="$PATH:$ANDROID_HOME/platform-tools"
 #export PATH="$PATH:/opt/flutter/bin"
+
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
