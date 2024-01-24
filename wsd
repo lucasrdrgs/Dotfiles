@@ -1,0 +1,19 @@
+#!/bin/bash
+device=$(/home/lucas/.wacom/get-device-id)
+
+if [[ -z "$1"  ]]; then
+  MON_NO=0
+else
+  MON_NO=$1
+fi
+
+MON_CON=$(xrandr --listactivemonitors | grep "$MON_NO:" | tr -s " " | cut -d " " -f 5)
+
+if [[ -z "$MON_CON" ]]; then
+  echo "No monitor with number $MON_NO was found!"
+  MON_COUNT=$(xrandr --listactivemonitors | grep "Monitors:" | cut -d " " -f 2)
+  echo "(A total of $MON_COUNT monitors were found)"
+  exit 1
+fi
+
+xsetwacom --set $device MapToOutput "HEAD-$MON_NO"

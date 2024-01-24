@@ -1,0 +1,4 @@
+#!/bin/bash
+
+active_monitors=$(xrandr --listactivemonitors | cut -d ' ' -f 6)
+echo $active_monitors

@@ -1,0 +1,3 @@
+#!/bin/bash
+device=$(/home/lucas/.wacom/get-device-id)
+xsetwacom set "$device" Button 2 "key +ctrl z -ctrl"

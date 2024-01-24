@@ -1,0 +1,9 @@
+#!/bin/bash
+device=$(/home/lucas/.wacom/get-device-id)
+
+rot='cw'
+if [ "$1" == "ccw" ]; then
+  rot='ccw'
+fi
+
+xsetwacom --set "$device" Rotate "$rot"
