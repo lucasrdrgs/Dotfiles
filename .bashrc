@@ -117,19 +117,35 @@ get_venv_name () {
     fi
 }
 
+parse_git_branch() {
+    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+}
+
+stringify_git_branch() {
+	branch=""
+
+	git_branch="$(parse_git_branch)"
+
+	if [[ -n $git_branch ]]; then
+		branch=" \[\e[38;5;194m\][$git_branch]\[\e[0m\]"
+	fi
+	
+	echo "$branch"
+}
+
 SHH_TOGGLE=1
 shh () {
 	if [[ $SHH_TOGGLE -eq 0 ]]; then
 		SHH_TOGGLE=1
-    	PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;172;212;238m\]\W \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+    	PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;172;212;238m\]\W$(stringify_git_branch) \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
     	if [ "$TERM_PROGRAM" = "vscode" ]; then
-        	PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+        	PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;172;212;238m\]\W$(stringify_git_branch) \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
 	    fi
 	else
 		SHH_TOGGLE=0
-		PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;242;44;61m\]\u \[\e[38;2;172;212;238m\]\w \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
+		PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;242;44;61m\]\u \[\e[38;2;172;212;238m\]\w$(stringify_git_branch) \[\e[38;2;242;44;61m\]> \[\e[0m\]"'
 		if [ "$TERM_PROGRAM" = "vscode" ]; then
-			PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;0;122;204m\]code \[\e[38;2;172;212;238m\]\W \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
+			PROMPT_COMMAND='PS1="$(get_venv_name)\[\e[38;2;0;122;204m\]code \[\e[38;2;172;212;238m\]\W$(stringify_git_branch) \[\e[38;2;0;122;204m\]> \[\e[0m\]"'
 		fi
 	fi
 }
@@ -147,7 +163,7 @@ cat () {
     if [[ $# -ge 1 && -n "$wezterm_exists" ]]; then
         mime=$(file -b --mime-type $1)
         if [[ "$mime" == *image/* ]]; then
-            wezterm imgcat $1
+            wezterm imgcat "$@"
             return 0
         fi
     fi
@@ -155,9 +171,9 @@ cat () {
     pygmentize_exists=$(which pygmentize 2>/dev/null)
     if [[ -z "$pygmentize_exists" ]]; then
         if [[ $LONGCAT -eq 1 ]]; then
-            /bin/cat $1 | less -NR
+            /bin/cat $@ | less -NR
         else
-            /bin/cat $1
+            /bin/cat $@
         fi
         echo "(pygmentize not found, fell back to cat)"
         return
@@ -192,3 +208,33 @@ fi
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
+
+alias mkvenv="if [ ! -d \"./venv\" ]; then python -m venv venv; fi; source venv/bin/activate"
+
+alias ac="source venv/bin/activate"
+alias py="python"
+function py {
+	if [ $# -eq 0 ]; then
+		python
+	else
+		python $@
+	fi
+}
+alias pym="py main.py"
+function cf {
+	cf_target='.'
+	if [ $# -ne 0 ]; then
+		cf_target="$1"
+	fi
+	echo $(ls -1 $cf_target | wc -l)
+}
+
+function lenv {
+	env_file=".env"
+	if [ $# -ne 0 ]; then
+		env_file="$1"
+	fi
+	set -o allexport && source $env_file && set +o allexport
+}
+
+export PATH="$PATH:$(go env GOPATH)/bin"
